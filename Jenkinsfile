@@ -21,8 +21,8 @@ pipeline {
         }
         stage('Install Dependencies') {
             steps {
-                sh 'npm install'
-                sh 'npx playwright install --with-deps' 
+                bat 'npm install'
+                bat 'npx playwright install --with-deps' 
             }
         }
         stage('Run Tests') {
@@ -44,9 +44,9 @@ pipeline {
                         runCommand = "tests/"
                     }
                     
-                    sh "npx rimraf allure-results allure-report"
+                    bat "npx rimraf allure-results allure-report"
                     // Execute the dynamic command
-                    sh "npx playwright test ${runCommand}"
+                    bat "npx playwright test ${runCommand}"
                 }
             }
         }
@@ -54,7 +54,7 @@ pipeline {
     
     post {
         always {
-            sh 'npx allure generate ./allure-results -o ./allure-report --clean'
+            bat 'npx allure generate ./allure-results -o ./allure-report --clean'
             archiveArtifacts artifacts: 'allure-report/**', allowEmptyArchive: true
         }
     }
