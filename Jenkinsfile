@@ -54,7 +54,7 @@ pipeline {
             script {
                 try {
                     // Generate Allure Report
-                    bat 'npx allure generate ./allure-results -o ./allure-report --clean'
+                    bat 'npx allure generate ./allure-results -o ./allure-report'
                     // Archive the report folder
                     archiveArtifacts artifacts: 'allure-report/**', allowEmptyArchive: true
                 } catch (Exception e) {
