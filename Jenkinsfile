@@ -2,11 +2,8 @@ pipeline {
     agent any
     
     parameters {
-        // Option 1: Choose a Suite
-        choice(name: 'TEST_SUITE', choices: ['all', 'smoke', 'regression', 'specific_file'], description: 'Select the test suite or choose "specific_file" to use the box below.')
-        
-        // Option 2: Type a specific file path
-        string(name: 'SPEC_PATH', defaultValue: '', description: 'If you selected "specific_file" above, enter the path (e.g., tests/login.spec.js)')
+        choice(name: 'TEST_SUITE', choices: ['all', 'smoke', 'regression', 'specific_file'], description: 'Select the test suite.')
+        string(name: 'SPEC_PATH', defaultValue: '', description: 'Enter path if "specific_file" is selected (e.g., tests/login.spec.js)')
     }
 
     triggers {
@@ -21,6 +18,7 @@ pipeline {
         }
         stage('Install Dependencies') {
             steps {
+                // Using 'bat' for Windows environment
                 bat 'npm install'
                 bat 'npx playwright install --with-deps' 
             }
@@ -31,21 +29,18 @@ pipeline {
                     def runCommand = ""
 
                     if (params.TEST_SUITE == 'specific_file' && params.SPEC_PATH != "") {
-                        // Run exactly one file
                         runCommand = "${params.SPEC_PATH}"
                     } else if (params.TEST_SUITE == 'smoke') {
-                        // Run by tag
                         runCommand = "--grep @smoke"
                     } else if (params.TEST_SUITE == 'regression') {
-                        // Run by tag
                         runCommand = "--grep @regression"
                     } else {
-                        // Default: Run everything in the tests folder
                         runCommand = "tests/"
                     }
                     
+                    // Clean previous results
                     bat "npx rimraf allure-results allure-report"
-                    // Execute the dynamic command
+                    // Execute Playwright tests
                     bat "npx playwright test ${runCommand}"
                 }
             }
@@ -54,8 +49,18 @@ pipeline {
     
     post {
         always {
-            bat 'npx allure generate ./allure-results -o ./allure-report --clean'
-            archiveArtifacts artifacts: 'allure-report/**', allowEmptyArchive: true
+            // We use a script block to ensure 'bat' and 'archiveArtifacts' 
+            // have a valid node/workspace context even if previous stages failed.
+            script {
+                try {
+                    // Generate Allure Report
+                    bat 'npx allure generate ./allure-results -o ./allure-report --clean'
+                    // Archive the report folder
+                    archiveArtifacts artifacts: 'allure-report/**', allowEmptyArchive: true
+                } catch (Exception e) {
+                    echo "Post-build step skipped or failed: ${e.message}"
+                }
+            }
         }
     }
 }
