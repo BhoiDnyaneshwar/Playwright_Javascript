@@ -51,8 +51,7 @@ pipeline {
     post {
         always {
             script {
-                // Ensure we are inside a node context
-                node('built-in') {
+               
                     try {
                         // 3. Generate the report with --clean to overwrite old data
                         bat 'npx allure generate ./allure-results -o ./allure-report'
@@ -65,7 +64,6 @@ pipeline {
                         echo "Failed to generate Allure report: ${e.message}"
                     }
                 }
-            }
         }
     }
 }
