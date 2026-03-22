@@ -6,10 +6,6 @@ pipeline {
         string(name: 'SPEC_PATH', defaultValue: '', description: 'Enter path if "specific_file" is selected (e.g., tests/login.spec.js)')
     }
 
-    triggers {
-        githubPush() 
-    }
-
     stages {
         stage('Checkout') {
             steps {
@@ -18,7 +14,6 @@ pipeline {
         }
         stage('Install Dependencies') {
             steps {
-                // Using 'bat' for Windows environment
                 bat 'npm install'
                 bat 'npx playwright install --with-deps' 
             }
@@ -27,7 +22,6 @@ pipeline {
             steps {
                 script {
                     def runCommand = ""
-
                     if (params.TEST_SUITE == 'specific_file' && params.SPEC_PATH != "") {
                         runCommand = "${params.SPEC_PATH}"
                     } else if (params.TEST_SUITE == 'smoke') {
@@ -38,10 +32,17 @@ pipeline {
                         runCommand = "tests/"
                     }
                     
-                    // Clean previous results
+                    // 1. CRITICAL: Clean old results BEFORE running tests
                     bat "npx rimraf allure-results allure-report"
-                    // Execute Playwright tests
-                    bat "npx playwright test ${runCommand}"
+                    
+                    // 2. USE try-finally: This ensures that even if tests fail, 
+                    // Jenkins doesn't skip the rest of the script logic.
+                    try {
+                        bat "npx playwright test ${runCommand}"
+                    } finally {
+                        // This block runs even if the test fails
+                        echo "Tests completed (Passed or Failed). Proceeding to report generation..."
+                    }
                 }
             }
         }
@@ -49,16 +50,20 @@ pipeline {
     
     post {
         always {
-            // We use a script block to ensure 'bat' and 'archiveArtifacts' 
-            // have a valid node/workspace context even if previous stages failed.
             script {
-                try {
-                    // Generate Allure Report
-                    bat 'npx allure generate ./allure-results -o ./allure-report'
-                    // Archive the report folder
-                    archiveArtifacts artifacts: 'allure-report/**', allowEmptyArchive: true
-                } catch (Exception e) {
-                    echo "Post-build step skipped or failed: ${e.message}"
+                // Ensure we are inside a node context
+                node('built-in') {
+                    try {
+                        // 3. Generate the report with --clean to overwrite old data
+                        bat 'npx allure generate ./allure-results -o ./allure-report'
+                        
+                        // 4. Archive the report
+                        archiveArtifacts artifacts: 'allure-report/**', allowEmptyArchive: true
+                        
+                        echo "Allure report successfully generated and archived."
+                    } catch (Exception e) {
+                        echo "Failed to generate Allure report: ${e.message}"
+                    }
                 }
             }
         }
