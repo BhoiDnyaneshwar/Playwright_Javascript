@@ -2,10 +2,17 @@ pipeline {
     agent any
     
     parameters {
-        choice(name: 'TEST_SUITE', choices: ['all', 'smoke', 'regression', 'specific_file'], description: 'Select the test suite.')
-        string(name: 'SPEC_PATH', defaultValue: '', description: 'Enter path if "specific_file" is selected (e.g., tests/login.spec.js)')
+        // Option 1: Choose a Suite
+        choice(name: 'TEST_SUITE', choices: ['all', 'smoke', 'regression', 'specific_file'], description: 'Select the test suite or choose "specific_file" to use the box below.')
+        
+        // Option 2: Type a specific file path
+        string(name: 'SPEC_PATH', defaultValue: '', description: 'If you selected "specific_file" above, enter the path (e.g., tests/login.spec.js)')
     }
 
+    triggers {
+        githubPush() 
+    }
+    
     stages {
         stage('Checkout') {
             steps {
