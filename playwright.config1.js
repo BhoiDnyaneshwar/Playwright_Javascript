@@ -22,7 +22,7 @@ const config = {
     timeout: 40 * 1000  //it replace default  -default is 30 sec
   },
   //reporter: "html",
-  reporter:[["line"],["allure-playwright", { outputFolder: 'allure-results'}]],
+  reporter:[['html'],["line"],["allure-playwright", { outputFolder: 'allure-results'}]],
 
   projects: [
     {
@@ -54,6 +54,12 @@ const config = {
         video:"on",
         trace: "on"
 
+      }
+    },
+    {
+      name:"chromeBrowser",
+      use:{
+        ...devices['Desktop Chrome']
       }
     }
   ]
