@@ -13,10 +13,6 @@ pipeline {
         githubPush() 
     }
 
-    tools {
-        nodejs 'node' 
-    }
-
     stages {
         stage('Checkout') {
             steps {
