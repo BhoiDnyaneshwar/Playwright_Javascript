@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "allureReportAllTest": "rimraf allure-results allure-report && npx playwright test tests/clientAppPO.spec.js && npx allure generate ./allure-results -o ./allure-report && npx allure open ./allure-report",
-    "projectChrome":"rimraf allure-results allure-report && npx playwright test tests/clientAppPO.spec.js --config playwright.config1.js --project=chromeTest && npx allure generate ./allure-results -o ./allure-report && npx allure open ./allure-report",
-    "UIPlaywright":"npx playwright test --ui --config playwright.config1.js --project=chromeTest"
+    "projectChrome": "rimraf allure-results allure-report && npx playwright test tests/clientAppPO.spec.js --config playwright.config1.js --project=chromeTest && npx allure generate ./allure-results -o ./allure-report && npx allure open ./allure-report",
+    "UIPlaywright": "npx playwright test --ui --config playwright.config1.js --project=chromeTest"
   },
   "keywords": [],
   "author": "",
