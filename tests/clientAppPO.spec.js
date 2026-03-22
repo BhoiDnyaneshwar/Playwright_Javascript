@@ -7,6 +7,7 @@ const webUtil=require("../tests/PageObjectFiles/webUtil");
 const jsObjectData = JSON.parse(JSON.stringify(require("../CreateOrderTestData/TestData.json")));
 test.describe.configure({ mode: "serial" })
 let orderIdTxt;
+test.describe("end to end test case for client app", async ()=>{
 test("@smoke Page object model client APP", async ({ page }, testInfo) => {
     const poManager = new POManager(page);
     await test.step("I'm login as specialist to client APP", async () => {
@@ -53,6 +54,7 @@ test("@smoke Page object model client APP", async ({ page }, testInfo) => {
         await webUtil.testInformation(testInfo, page, "verify final Id");
     });
 
+})
 })
 
 customtest("@smoke @regression Page object model client APP fixtureDataSet", { tag: ["@adhoc", "@regression"] }, async ({ page, fixtureTestDataset }) => {

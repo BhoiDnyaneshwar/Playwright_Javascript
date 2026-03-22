@@ -24,7 +24,7 @@ const config={
 
    use: {
      browserName:"chromium",
-     headless: false,
+     headless: true,
       viewport: null, // Set viewport to null
         launchOptions: {
           args: ['--start-maximized'] 
