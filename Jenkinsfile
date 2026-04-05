@@ -12,7 +12,7 @@ pipeline {
     triggers {
         githubPush() 
     }
-    
+
     stages {
         stage('Checkout') {
             steps {
@@ -54,8 +54,7 @@ pipeline {
     
     post {
         always {
-            sh 'npx allure generate ./allure-results -o ./allure-report --clean'
-            archiveArtifacts artifacts: 'allure-report/**', allowEmptyArchive: true
+            allure includeProperties: false, jdk: '', results: [[path: 'allure-results']]
         }
     }
 }

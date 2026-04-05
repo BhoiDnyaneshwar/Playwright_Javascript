@@ -1,0 +1,32 @@
+{
+  "servers": {
+    "Server Name": {
+      "type": "stdio",
+      "sandboxEnabled": false,
+      "command": "npx",
+      "cwd": "${input:cwd}",
+      "args": [
+        "@playwright/mcp@0.0.68"
+      ],
+      "dev": {
+        "watch": [],
+        "debug": {}
+      }
+    },
+    "playwright-test": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "playwright",
+        "run-test-mcp-server"
+      ]
+    }
+  },
+  "inputs": [
+    {
+      "id": "cwd",
+      "type": "promptString",
+      "description": "Working Directory"
+    }
+  ]
+}
