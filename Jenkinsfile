@@ -70,7 +70,8 @@ pipeline {
              script {
                def allureHome = tool name: 'allure', type: 'ru.yandex.qatools.allure.jenkins.tools.AllureCommandlineInstallation'
                allure includeProperties: false, jdk: '', results: [[path: 'allure-results']]
-                   
+               // This archives the ACTUAL trace files so you can download them directly
+               archiveArtifacts artifacts: 'test-results/**/*.zip', allowEmptyArchive: true
               }
         }
     }
