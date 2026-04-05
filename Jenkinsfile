@@ -6,7 +6,7 @@ pipeline {
         choice(name: 'TEST_SUITE', choices: ['all', 'smoke', 'regression', 'specific_file'], description: 'Select the test suite or choose "specific_file" to use the box below.')
         
         //Option 2: Choose a Env
-        choice(name: 'TEST_ENV',  defaultValue: 'test', choices: ['dev', 'test', 'uat'], description: 'Select the Environment to run tests')
+        choice(name: 'TEST_ENV', choices: ['test', 'dev', 'uat'], description: 'Select the Environment to run tests')
 
         // Option 3: Type a specific file path
         string(name: 'SPEC_PATH', defaultValue: '', description: 'If you selected "specific_file" above, enter the path (e.g., tests/login.spec.js)')
