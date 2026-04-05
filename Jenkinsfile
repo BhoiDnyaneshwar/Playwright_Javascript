@@ -31,10 +31,10 @@ pipeline {
         stage('Run Tests') {
             steps {
                 withCredentials([
-                    string(credentialsId: 'USERNAME', variable: 'USERNAME'),
-                    string(credentialsId: 'PASSWORD', variable: 'PASSWORD')
+                    string(credentialsId: 'USERNAME', variable: 'MY_USER'),
+                    string(credentialsId: 'PASSWORD', variable: 'MY_PASS')
                 ])
-
+                {
                 script {
                     def runCommand = ""
 
@@ -55,10 +55,11 @@ pipeline {
                     bat "npx rimraf allure-results allure-report"
                     // Execute the dynamic command
                     try{
-                        bat "set TEST_ENV=${params.TEST_ENV} && set USERNAME=${USERNAME} && set PASSWORD=${PASSWORD} && npx playwright test ${runCommand}"
+                        bat "set TEST_ENV=${params.TEST_ENV} && set USERNAME=${MY_USER} && set PASSWORD=${MY_PASS} && npx playwright test ${runCommand}"
                     }catch (Exception e) {
                         echo "Failed to Process Test: ${e.message}"
                     }
+                }
                 }
             }
         }
