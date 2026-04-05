@@ -5,7 +5,10 @@ pipeline {
         // Option 1: Choose a Suite
         choice(name: 'TEST_SUITE', choices: ['all', 'smoke', 'regression', 'specific_file'], description: 'Select the test suite or choose "specific_file" to use the box below.')
         
-        // Option 2: Type a specific file path
+        //Option 2: Choose a Env
+        choice(name: 'TEST_ENV', choices: ['test', 'dev', 'uat'], description: 'Select the Environment to run tests')
+
+        // Option 3: Type a specific file path
         string(name: 'SPEC_PATH', defaultValue: '', description: 'If you selected "specific_file" above, enter the path (e.g., tests/login.spec.js)')
     }
 
@@ -21,12 +24,17 @@ pipeline {
         }
         stage('Install Dependencies') {
             steps {
-                sh 'npm install'
-                sh 'npx playwright install --with-deps' 
+                bat 'npm install'
+                bat 'npx playwright install --with-deps' 
             }
         }
         stage('Run Tests') {
             steps {
+                withCredentials([
+                    string(credentialsId: 'USERNAME', variable: 'MY_USER'),
+                    string(credentialsId: 'PASSWORD', variable: 'MY_PASS')
+                ])
+                {
                 script {
                     def runCommand = ""
 
@@ -44,9 +52,14 @@ pipeline {
                         runCommand = "tests/"
                     }
                     
-                    sh "npx rimraf allure-results allure-report"
+                    bat "npx rimraf allure-results allure-report"
                     // Execute the dynamic command
-                    sh "npx playwright test ${runCommand}"
+                    try{
+                        bat "set TEST_ENV=${params.TEST_ENV}&&set USERNAME=%MY_USER%&&set PASSWORD=%MY_PASS%&&npx playwright test ${runCommand}"
+                    }catch (Exception e) {
+                        echo "Failed to Process Test: ${e.message}"
+                    }
+                }
                 }
             }
         }
@@ -54,7 +67,12 @@ pipeline {
     
     post {
         always {
-            allure includeProperties: false, jdk: '', results: [[path: 'allure-results']]
+             script {
+               def allureHome = tool name: 'allure', type: 'ru.yandex.qatools.allure.jenkins.tools.AllureCommandlineInstallation'
+               allure includeProperties: false, jdk: '', results: [[path: 'allure-results']]
+               // This archives the ACTUAL trace files so you can download them directly
+               archiveArtifacts artifacts: 'test-results/**/*.zip', allowEmptyArchive: true
+              }
         }
     }
 }
