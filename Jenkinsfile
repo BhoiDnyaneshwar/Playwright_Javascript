@@ -72,6 +72,12 @@ pipeline {
                allure includeProperties: false, jdk: '', results: [[path: 'allure-results']]
                // This archives the ACTUAL trace files so you can download them directly
                archiveArtifacts artifacts: 'test-results/**/*.zip', allowEmptyArchive: true
+                 // Archive the Playwright HTML report folder
+               archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
+        
+             // This makes the report viewable directly in Jenkins (requires HTML Publisher Plugin)
+               publishHTML([allowMissing: false, alwaysLinkToLastBuild: true, keepAll: true, 
+               reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwright Report'])
               }
         }
     }
