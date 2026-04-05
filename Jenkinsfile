@@ -12,7 +12,7 @@ pipeline {
     triggers {
         githubPush() 
     }
-    
+
     stages {
         stage('Checkout') {
             steps {
@@ -57,6 +57,7 @@ pipeline {
     
     post {
         always {
+            allure includeProperties: false, jdk: '', results: [[path: 'allure-results']]
             script {
                
                     try {
