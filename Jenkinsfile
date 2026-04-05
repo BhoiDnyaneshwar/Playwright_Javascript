@@ -21,32 +21,35 @@ pipeline {
         }
         stage('Install Dependencies') {
             steps {
-                sh 'npm install'
-                sh 'npx playwright install --with-deps' 
+                bat 'npm install'
+                bat 'npx playwright install --with-deps' 
             }
         }
         stage('Run Tests') {
             steps {
                 script {
                     def runCommand = ""
-
                     if (params.TEST_SUITE == 'specific_file' && params.SPEC_PATH != "") {
-                        // Run exactly one file
                         runCommand = "${params.SPEC_PATH}"
                     } else if (params.TEST_SUITE == 'smoke') {
-                        // Run by tag
                         runCommand = "--grep @smoke"
                     } else if (params.TEST_SUITE == 'regression') {
-                        // Run by tag
                         runCommand = "--grep @regression"
                     } else {
-                        // Default: Run everything in the tests folder
                         runCommand = "tests/"
                     }
                     
-                    sh "npx rimraf allure-results allure-report"
-                    // Execute the dynamic command
-                    sh "npx playwright test ${runCommand}"
+                    // 1. CRITICAL: Clean old results BEFORE running tests
+                    bat "npx rimraf allure-results allure-report"
+                    
+                    // 2. USE try-finally: This ensures that even if tests fail, 
+                    // Jenkins doesn't skip the rest of the script logic.
+                    try {
+                        bat "npx playwright test ${runCommand}"
+                    } finally {
+                        // This block runs even if the test fails
+                        echo "Tests completed (Passed or Failed). Proceeding to report generation..."
+                    }
                 }
             }
         }
@@ -55,6 +58,20 @@ pipeline {
     post {
         always {
             allure includeProperties: false, jdk: '', results: [[path: 'allure-results']]
+            script {
+               
+                    try {
+                        // 3. Generate the report with --clean to overwrite old data
+                        bat 'npx allure generate ./allure-results -o ./allure-report'
+                        
+                        // 4. Archive the report
+                        archiveArtifacts artifacts: 'allure-report/**', allowEmptyArchive: true
+                        
+                        echo "Allure report successfully generated and archived."
+                    } catch (Exception e) {
+                        echo "Failed to generate Allure report: ${e.message}"
+                    }
+                }
         }
     }
 }
