@@ -16,6 +16,8 @@ test.describe("Verify client App API", async () => {
 
     //Post
     test("Verify Post Login API", async ({ page }) => {
+        console.log( process.env.USERNAME);
+        console.log( process.env.PASSWORD);
 
         apiContext = await request.newContext({
             baseURL: "https://rahulshettyacademy.com/"
