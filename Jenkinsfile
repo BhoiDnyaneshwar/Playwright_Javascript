@@ -67,21 +67,11 @@ pipeline {
     
     post {
         always {
-            allure includeProperties: false, jdk: '', results: [[path: 'allure-results']]
              script {
-               
-                    try {
-                        // 3. Generate the report with --clean to overwrite old data
-                        bat 'npx allure generate ./allure-results -o ./allure-report'
-                        
-                        // 4. Archive the report
-                        archiveArtifacts artifacts: 'allure-report/**', allowEmptyArchive: true
-                        
-                        echo "Allure report successfully generated and archived."
-                    } catch (Exception e) {
-                        echo "Failed to generate Allure report: ${e.message}"
-                    }
-                }
+               def allureHome = tool name: 'allure', type: 'ru.yandex.qatools.allure.jenkins.tools.AllureCommandlineInstallation'
+               allure includeProperties: false, jdk: '', results: [[path: 'allure-results']]
+                   
+              }
         }
     }
 }
