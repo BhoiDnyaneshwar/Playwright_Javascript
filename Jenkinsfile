@@ -5,7 +5,10 @@ pipeline {
         // Option 1: Choose a Suite
         choice(name: 'TEST_SUITE', choices: ['all', 'smoke', 'regression', 'specific_file'], description: 'Select the test suite or choose "specific_file" to use the box below.')
         
-        // Option 2: Type a specific file path
+        //Option 2: Choose a Env
+        choice(name: 'TEST_ENV',  defaultValue: 'test', choices: ['dev', 'test', 'uat'], description: 'Select the Environment to run tests')
+
+        // Option 3: Type a specific file path
         string(name: 'SPEC_PATH', defaultValue: '', description: 'If you selected "specific_file" above, enter the path (e.g., tests/login.spec.js)')
     }
 
@@ -27,28 +30,34 @@ pipeline {
         }
         stage('Run Tests') {
             steps {
+                withCredentials([
+                    string(credentialsId: 'USERNAME', variable: 'USERNAME'),
+                    string(credentialsId: 'PASSWORD', variable: 'PASSWORD')
+                ])
+
                 script {
                     def runCommand = ""
+
                     if (params.TEST_SUITE == 'specific_file' && params.SPEC_PATH != "") {
+                        // Run exactly one file
                         runCommand = "${params.SPEC_PATH}"
                     } else if (params.TEST_SUITE == 'smoke') {
+                        // Run by tag
                         runCommand = "--grep @smoke"
                     } else if (params.TEST_SUITE == 'regression') {
+                        // Run by tag
                         runCommand = "--grep @regression"
                     } else {
+                        // Default: Run everything in the tests folder
                         runCommand = "tests/"
                     }
                     
-                    // 1. CRITICAL: Clean old results BEFORE running tests
                     bat "npx rimraf allure-results allure-report"
-                    
-                    // 2. USE try-finally: This ensures that even if tests fail, 
-                    // Jenkins doesn't skip the rest of the script logic.
-                    try {
-                        bat "npx playwright test ${runCommand}"
-                    } finally {
-                        // This block runs even if the test fails
-                        echo "Tests completed (Passed or Failed). Proceeding to report generation..."
+                    // Execute the dynamic command
+                    try{
+                        bat "set TEST_ENV=${params.TEST_ENV} && set USERNAME=${USERNAME} && set PASSWORD=${PASSWORD} && npx playwright test ${runCommand}"
+                    }catch (Exception e) {
+                        echo "Failed to Process Test: ${e.message}"
                     }
                 }
             }
@@ -58,7 +67,7 @@ pipeline {
     post {
         always {
             allure includeProperties: false, jdk: '', results: [[path: 'allure-results']]
-            script {
+             script {
                
                     try {
                         // 3. Generate the report with --clean to overwrite old data
